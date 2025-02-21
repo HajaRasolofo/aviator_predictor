@@ -1,0 +1,73 @@
+import streamlit as st
+import random
+
+# Fonction pour vérifier si un multiplicateur est valide
+def is_valid_multiplier(multiplier):
+    try:
+        float(multiplier)
+        return True
+    except ValueError:
+        return False
+
+# Fonction de prédiction basée sur les résultats entrés
+def probabilistic_prediction(tours, multiplicateurs):
+    predicted_tours = set()
+
+    # Calculer la probabilité d'un multiplicateur élevé
+    high_multiplier_probability = calculate_probability(multiplicateurs)
+    
+    last_tour = tours[-1]
+    
+    # Générer des prédictions basées sur des intervalles plus larges
+    while len(predicted_tours) < 3:  # Limité à 3 résultats pour la prédiction
+        predicted_tour = last_tour + random.randint(4, 8)  # Plage entre 4 et 8 tours
+        
+        predicted_multiplier = random.uniform(1.0, 3.0)  # Calcul du multiplicateur
+        
+        # Si le multiplicateur est > 2.00, on ajoute le tour à la liste des prédictions
+        if predicted_multiplier > 2.00 and random.random() < high_multiplier_probability:
+            predicted_tours.add(predicted_tour)
+
+    return sorted(predicted_tours)  # Retourner les tours triés par ordre croissant
+
+# Fonction pour calculer la probabilité d'un multiplicateur élevé
+def calculate_probability(multiplicateurs):
+    high_multiplier_count = sum(1 for m in multiplicateurs if m > 2.00)
+    total_count = len(multiplicateurs)
+    
+    if total_count > 0:
+        return high_multiplier_count / total_count
+    return 0.5  # Probabilité par défaut de 50% si aucune donnée valide
+
+# Titre de l'application
+st.title("Aviator Predictor")
+
+# Saisie des résultats (tour et multiplicateur)
+st.header("Saisie des Résultats")
+tour1 = st.text_input("Tour 1 :", "")
+mult1 = st.text_input("Multiplicateur 1 :", "")
+tour2 = st.text_input("Tour 2 :", "")
+mult2 = st.text_input("Multiplicateur 2 :", "")
+
+# Vérification des entrées
+if st.button("Prédire"):
+    tours = []
+    multiplicateurs = []
+    
+    # Vérification de la validité des données
+    if tour1.isdigit() and is_valid_multiplier(mult1) and tour2.isdigit() and is_valid_multiplier(mult2):
+        tours.append(int(tour1))
+        tours.append(int(tour2))
+        multiplicateurs.append(float(mult1))
+        multiplicateurs.append(float(mult2))
+
+        # Calculer la prédiction
+        predicted_tours = probabilistic_prediction(tours, multiplicateurs)
+        
+        if predicted_tours:
+            st.success(f"Prédiction des prochains tours avec multiplicateur > 2.00 :")
+            st.write(", ".join(map(str, predicted_tours)))
+        else:
+            st.warning("Aucune prédiction disponible.")
+    else:
+        st.error("Veuillez entrer des résultats valides pour les tours et multiplicateurs.")
